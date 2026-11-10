@@ -15,9 +15,3 @@ ZEYIN — пайдаланушыларға қызығушылықтарына с
 - **Frontend:** HTML, CSS, JavaScript
 - **Авторизация:** Google, GitHub, Facebook
 - **Хостинг:** Netlify
-
-## Орнату және іске қосу (Getting Started)
-Репозиторийді жергілікті құрылғыға көшіру үшін төмендегі пәрменді орындаңыз:
-
-```bash
-git clone [https://github.com/Koldonchu/ZEYIN-FocusApp.git](https://github.com/Koldonchu/ZEYIN-FocusApp.git)
