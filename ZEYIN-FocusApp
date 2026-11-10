@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="kk" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZEYIN — Focus, AI Planner & Rewards</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { purple: '#6366f1', pink: '#a855f7', cyan: '#38bdf8', emerald: '#34d399', amber: '#fbbf24' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass-card {
+            background: rgba(11, 19, 41, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.7);
+            transition: all 0.3s ease;
+        }
+        .glass-card:hover {
+            border-color: rgba(56, 189, 248, 0.5);
+            box-shadow: 0 0 35px rgba(56, 189, 248, 0.2);
+        }
+        .glow-totoro { box-shadow: 0 0 40px -5px rgba(56, 189, 248, 0.5); }
+        .glow-emerald { box-shadow: 0 0 40px -5px rgba(52, 211, 153, 0.5); }
+        .cat-selected {
+            border-color: #38bdf8 !important;
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.35), rgba(168, 85, 247, 0.2)) !important;
+            box-shadow: 0 0 25px rgba(56, 189, 248, 0.5);
+        }
+        body {
+            background: linear-gradient(to bottom, rgba(11, 19, 41, 0.75), rgba(9, 14, 28, 0.9)), 
+                        url('https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=1920&auto=format&fit=crop') no-repeat center center fixed;
+            background-size: cover;
+            font-family: Inter, system-ui, Arial, sans-serif;
+        }
+        @keyframes totoroPulse {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.6)); }
+            50% { transform: scale(1.05); filter: drop-shadow(0 0 20px rgba(168, 85, 247, 0.9)); }
+        }
+        .logo-anim { animation: totoroPulse 3s infinite ease-in-out; }
+    </style>
+</head>
+<body class="text-gray-100 min-h-screen flex flex-col justify-between antialiased selection:bg-cyan-500 selection:text-white">
+
+    <!-- Top Navigation -->
+    <header class="border-b border-cyan-500/20 bg-[#0b1329]/90 backdrop-blur-md sticky top-0 z-40">
+        <div class="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3 font-black text-xl tracking-wider">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-cyan-500 via-indigo-600 to-purple-600 flex items-center justify-center text-white text-lg shadow-xl logo-anim">
+                    <i class="fa-solid fa-umbrella"></i>
+                </div>
+                <div class="flex flex-col">
+                    <span class="bg-gradient-to-r from-white via-cyan-200 to-sky-400 bg-clip-text text-transparent leading-tight tracking-widest text-lg font-black">ZEYIN</span>
+                    <span id="navSubtitle" class="text-[9px] text-cyan-300 uppercase tracking-widest font-semibold">Totoro Focus</span>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <!-- LANGUAGE SWITCHER -->
+                <select id="langSelect" onchange="changeLanguage(this.value)" class="bg-[#111c38] border border-cyan-500/30 text-cyan-300 text-[10px] font-bold rounded-lg px-2 py-1.5 focus:outline-none cursor-pointer">
+                    <option value="kk">KZ</option>
+                    <option value="ru">RU</option>
+                    <option value="en">EN</option>
+                </select>
+
+                <div id="userBadge" class="hidden text-xs bg-[#111c38] border border-cyan-500/30 px-3 py-1.5 rounded-full flex items-center gap-1.5 cursor-pointer hover:border-cyan-400 transition shadow-md" onclick="switchTab('profile')">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                    <span id="navUserName" class="font-medium text-gray-200 text-[11px]">User</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-md mx-auto w-full px-4 py-6 flex-grow flex flex-col justify-center relative z-10">
+
+        <!-- STEP 1: Registration / Login & Socials -->
+        <section id="registerSection" class="glass-card rounded-3xl p-6 relative overflow-hidden space-y-4">
+            <div class="text-center mb-1">
+                <div class="w-16 h-16 bg-gradient-to-tr from-cyan-500/25 to-purple-500/25 border border-cyan-500/40 text-cyan-300 rounded-3xl flex items-center justify-center mx-auto mb-3 text-3xl shadow-2xl logo-anim">
+                    <i class="fa-solid fa-cloud-moon"></i>
+                </div>
+                <h1 id="regTitle" class="text-2xl font-black text-white tracking-wide">Зейініңді Шыңда!</h1>
+                <p id="regSubtitle" class="text-cyan-300 text-xs mt-1">Премиум фокус жүйесі және AI жоспарлаушы</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 text-center">
+                <div class="bg-[#0b1329]/90 border border-cyan-500/30 p-3 rounded-2xl">
+                    <div class="text-sm font-black text-cyan-400">6 Brands</div>
+                    <div id="lblCat" class="text-[9px] text-gray-400 uppercase mt-0.5">Категория</div>
+                </div>
+                <div class="bg-[#0b1329]/90 border border-cyan-500/30 p-3 rounded-2xl">
+                    <div class="text-sm font-black text-purple-300">Smart AI</div>
+                    <div id="lblPlan" class="text-[9px] text-gray-400 uppercase mt-0.5">Жоспарлау</div>
+                </div>
+            </div>
+
+            <form id="regForm" class="space-y-3">
+                <div>
+                    <label id="labelName" class="block text-xs font-semibold uppercase tracking-wider text-cyan-300 mb-1">Ник аты *</label>
+                    <input type="text" id="regName" required placeholder="Арман Әлиев" 
+                        class="w-full bg-[#0b1329] border border-cyan-500/30 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition text-xs shadow-inner">
+                </div>
+                <div>
+                    <label id="labelEmail" class="block text-xs font-semibold uppercase tracking-wider text-cyan-300 mb-1">Email *</label>
+                    <input type="email" id="regContact" required placeholder="arman@example.com" 
+                        class="w-full bg-[#0b1329] border border-cyan-500/30 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition text-xs shadow-inner">
+                </div>
+                <button type="submit" id="btnEnter"
+                    class="w-full bg-gradient-to-r from-cyan-500 via-indigo-600 to-purple-600 hover:opacity-95 text-white font-bold py-3.5 rounded-xl shadow-lg glow-totoro active:scale-[0.98] transition text-xs">
+                    Жүйеге кіру <i class="fa-solid fa-arrow-right ml-2"></i>
+                </button>
+            </form>
+
+            <div class="flex items-center my-2 text-gray-500 text-xs">
+                <div class="flex-grow border-t border-cyan-500/20"></div>
+                <span id="lblOr" class="px-2 uppercase text-[10px]">немесе әлеуметтік желі арқылы</span>
+                <div class="flex-grow border-t border-cyan-500/20"></div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2">
+                <button onclick="socialLogin('Google')" class="bg-[#111c38] hover:bg-[#162447] border border-cyan-500/30 py-2.5 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-1.5 transition shadow">
+                    <i class="fa-brands fa-google text-red-400"></i> Google
+                </button>
+                <button onclick="socialLogin('VK')" class="bg-[#111c38] hover:bg-[#162447] border border-cyan-500/30 py-2.5 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-1.5 transition shadow">
+                    <i class="fa-brands fa-vk text-blue-400"></i> VK
+                </button>
+                <button onclick="socialLogin('GitHub')" class="bg-[#111c38] hover:bg-[#162447] border border-cyan-500/30 py-2.5 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-1.5 transition shadow">
+                    <i class="fa-brands fa-github text-purple-400"></i> GitHub
+                </button>
+            </div>
+        </section>
+
+        <!-- DASHBOARD CONTAINER -->
+        <div id="dashboardContainer" class="hidden space-y-4">
+
+            <!-- TAB 1: MAIN HOME / TIMER SETUP & 6 BRAND CATEGORIES -->
+            <div id="tabMain" class="tab-pane space-y-4">
+                <div class="glass-card rounded-3xl p-4 bg-gradient-to-r from-cyan-950/40 via-indigo-950/30 to-purple-950/30 border border-cyan-500/30 text-center relative overflow-hidden">
+                    <div id="lblMotTitle" class="text-[10px] uppercase font-bold text-cyan-300 tracking-wider mb-1"><i class="fa-solid fa-bolt mr-1"></i> Жалпы мотивация</div>
+                    <p id="dailyMotivationText" class="text-xs text-white font-medium italic">«Әрбір үлкен жетістік кішкентай ғана қадамнан басталады!»</p>
+                </div>
+
+                <div class="glass-card rounded-3xl p-4 text-center">
+                    <h2 id="lblFocusTitle" class="text-sm font-bold text-white mb-0.5">Фокус сессиясы</h2>
+                    <p id="lblFocusDesc" class="text-gray-400 text-[11px]">Бренд категориясын таңдап, фокусты бастаңыз!</p>
+                </div>
+
+                <!-- 6 BRAND CATEGORIES -->
+                <div>
+                    <label id="lblSelectBrand" class="block text-[11px] font-extrabold uppercase tracking-wider text-cyan-300 mb-2">1. Бренд Категориясын таңдаңыз:</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="toggleCategory('food')" id="cat-food" class="cat-btn cat-selected glass-card p-3 rounded-2xl text-left border border-cyan-500/20 transition">
+                            <div class="flex items-center gap-2">
+                                <div class="w-7 h-7 rounded-xl bg-orange-500/20 text-orange-400 flex items-center justify-center text-xs shrink-0"><i class="fa-solid fa-burger"></i></div>
+                                <div><div class="text-[11px] font-bold text-white cat-food-title">Тамақ</div><div class="text-[9px] text-gray-400">CoffeeBoom</div></div>
+                            </div>
+                        </button>
+                        <button onclick="toggleCategory('fashion')" id="cat-fashion" class="cat-btn glass-card p-3 rounded-2xl text-left border border-cyan-500/20 transition">
+                            <div class="flex items-center gap-2">
+                                <div class="w-7 h-7 rounded-xl bg-purple-500/20 text-purple-300 flex items-center justify-center text-xs shrink-0"><i class="fa-solid fa-shirt"></i></div>
+                                <div><div class="text-[11px] font-bold text-white cat-fashion-title">Киім</div><div class="text-[9px] text-gray-400">Zara & Mango</div></div>
+                            </div>
+                        </button>
+                        <button onclick="toggleCategory('education')" id="cat-education" class="cat-btn glass-card p-3 rounded-2xl text-left border border-cyan-500/20 transition">
+                            <div class="flex items-center gap-2">
+                                <div class="w-7 h-7 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center text-xs shrink-0"><i class="fa-solid fa-graduation-cap"></i></div>
+                                <div><div class="text-[11px] font-bold text-white cat-edu-title">Білім</div><div class="text-[9px] text-gray-400">Coursera</div></div>
+                            </div>
+                        </button>
+                        <button onclick="toggleCategory('books')" id="cat-books" class="cat-btn glass-card p-3 rounded-2xl text-left border border-cyan-500/20 transition">
+                            <div class="flex items-center gap-2">
+                                <div class="w-7 h-7 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs shrink-0"><i class="fa-solid fa-book"></i></div>
+                                <div><div class="text-[11px] font-bold text-white cat-books-title">Кітаптар</div><div class="text-[9px] text-gray-400">Meloman</div></div>
+                            </div>
+                        </button>
+                        <button onclick="toggleCategory('tech')" id="cat-tech" class="cat-btn glass-card p-3 rounded-2xl text-left border border-cyan-500/20 transition">
+                            <div class="flex items-center gap-2">
+                                <div class="w-7 h-7 rounded-xl bg-cyan-500/20 text-cyan-300 flex items-center justify-center text-xs shrink-0"><i class="fa-solid fa-laptop-code"></i></div>
+                                <div><div class="text-[11px] font-bold text-white cat-tech-title">Техника</div><div class="text-[9px] text-gray-400">Technodom</div></div>
+                            </div>
+                        </button>
+                        <button onclick="toggleCategory('sport')" id="cat-sport" class="cat-btn glass-card p-3 rounded-2xl text-left border border-cyan-500/20 transition">
+                            <div class="flex items-center gap-2">
+                                <div class="w-7 h-7 rounded-xl bg-pink-500/20 text-pink-400 flex items-center justify-center text-xs shrink-0"><i class="fa-solid fa-dumbbell"></i></div>
+                                <div><div class="text-[11px] font-bold text-white cat-sport-title">Спорт</div><div class="text-[9px] text-gray-400">World Class</div></div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label id="lblSelectTime" class="block text-[11px] font-extrabold uppercase tracking-wider text-cyan-400 mb-2">2. Ұзақтығын таңдаңыз (1 мин = 12 ₸):</label>
+                    <div class="grid grid-cols-4 gap-1.5">
+                        <button onclick="selectDuration(15)" class="glass-card hover:border-cyan-400 rounded-2xl p-2.5 text-center transitionshadow-lg">
+                            <div class="text-xs font-black text-white">15 мин</div>
+                            <div class="text-[9px] text-emerald-400 font-bold mt-0.5">+180 ₸</div>
+                        </button>
+                        <button onclick="selectDuration(35)" class="glass-card hover:border-cyan-400 rounded-2xl p-2.5 text-center transition shadow-lg">
+                            <div class="text-xs font-black text-white">35 мин</div>
+                            <div class="text-[9px] text-emerald-400 font-bold mt-0.5">+420 ₸</div>
+                        </button>
+                        <button onclick="selectDuration(45)" class="glass-card hover:border-cyan-400 rounded-2xl p-2.5 text-center transition shadow-lg">
+                            <div class="text-xs font-black text-white">45 мин</div>
+                            <div class="text-[9px] text-emerald-400 font-bold mt-0.5">+540 ₸</div>
+                        </button>
+                        <button onclick="selectDuration(60)" class="glass-card hover:border-cyan-400 rounded-2xl p-2.5 text-center transition shadow-lg">
+                            <div class="text-xs font-black text-white">60 мин</div>
+                            <div class="text-[9px] text-emerald-400 font-bold mt-0.5">+720 ₸</div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: ACTIVE TIMER & ARCADE GAMES HUB -->
+            <div id="tabTimer" class="tab-pane hidden space-y-4">
+                <div class="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-3 flex items-center gap-3 text-amber-300 text-xs shadow-lg">
+                    <i class="fa-solid fa-shield-cat text-lg text-amber-400 shrink-0"></i>
+                    <span id="antiCheatMsg"><strong>Анти-чит белсенді:</strong> Басқа вкладкаға шықсаңыз сессия бұзылады!</span>
+                </div>
+
+                <div class="glass-card rounded-3xl p-5 text-center relative overflow-hidden shadow-2xl glow-totoro border border-cyan-500/30 space-y-2">
+                    <div id="lblTimerActive" class="text-xs uppercase tracking-widest text-cyan-300 font-bold">Фокус уақыты жүріп жатыр</div>
+                    <div id="timerDisplay" class="text-5xl font-black text-white tracking-tight font-mono my-1">25:00</div>
+                    <div class="text-[11px] text-emerald-400 font-semibold" id="activeBrandLabel">Таңдалған бренд: CoffeeBoom</div>
+                    <div class="w-full bg-[#0b1329] h-2.5 rounded-full overflow-hidden p-0.5 border border-cyan-500/20">
+                        <div id="timerProgress" class="bg-gradient-to-r from-cyan-400 to-indigo-500 h-full w-full rounded-full transition-all duration-1000"></div>
+                    </div>
+                </div>
+
+                <!-- ARCADE MINI GAMES SECTION -->
+                <div class="glass-card rounded-3xl p-4 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span id="lblArcadeHub" class="text-xs font-bold uppercase tracking-wider text-cyan-300 flex items-center gap-1.5">
+                            <i class="fa-solid fa-gamepad text-amber-400"></i> Аркада Мини-Ойындары (Демалыс)
+                        </span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="openArcadeGame('snake')" class="bg-[#0b1329] hover:bg-[#111c38] border border-cyan-500/20 p-3 rounded-2xl text-center text-xs transition shadow group">
+                            <i class="fa-solid fa-worm text-emerald-400 text-lg mb-1 group-hover:scale-110 transition"></i>
+                            <div id="gameSnakeName" class="font-bold text-[11px] text-white">Ретро Жыланша</div>
+                        </button>
+                        <button onclick="openArcadeGame('clicker')" class="bg-[#0b1329] hover:bg-[#111c38] border border-cyan-500/20 p-3 rounded-2xl text-center text-xs transition shadow group">
+                            <i class="fa-solid fa-bolt text-amber-400 text-lg mb-1 group-hover:scale-110 transition"></i>
+                            <div id="gameClickerName" class="font-bold text-[11px] text-white">Неон Кликер</div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: AI PLANNER & GOALS -->
+            <div id="tabGoals" class="tab-pane hidden space-y-4">
+                <div class="glass-card rounded-3xl p-5 space-y-3 bg-gradient-to-r from-cyan-950/40 via-indigo-950/30 to-purple-950/30 border border-cyan-500/40">
+                    <div class="flex items-center justify-between">
+                        <h2 id="aiPlannerTitle" class="text-sm font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i> ZEYIN AI Жоспарлаушысы
+                        </h2>
+                        <span class="text-[9px] bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 px-2 py-0.5 rounded-full font-semibold">Smart AI</span>
+                    </div>
+                    <p id="aiPlannerSubtitle" class="text-[11px] text-gray-300">Немен айналысқыңыз келеді? (Мысалы: «Экзаменге дайындық»)</p>
+                    <div class="flex gap-2">
+                        <input type="text" id="aiTopicInput" placeholder="Тақырыпты жазыңыз..." 
+                            class="w-full bg-[#0b1329] border border-cyan-500/30 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 shadow-inner">
+                        <button onclick="generateAIPlan()" id="btnGenerateAI" class="bg-gradient-to-r from-cyan-500 to-indigo-600 hover:opacity-90 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition shadow shrink-0">
+                            Жоспар құру ✦
+                        </button>
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-3xl p-5 space-y-4 shadow-xl">
+                    <div class="flex items-center justify-between">
+                        <h2 id="goalsHeaderTitle" class="text-base font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-bullseye text-cyan-300"></i> Менің мақсаттарым
+                        </h2>
+                        <span id="goalStatsBadge" class="text-xs text-cyan-300 bg-cyan-500/20 px-2.5 py-1 rounded-full border border-cyan-500/30">0/0 орындалды</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="text" id="newGoalInput" placeholder="Мақсат жазу..." 
+                            class="w-full bg-[#0b1329] border border-cyan-500/30 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 shadow-inner">
+                        <button onclick="addGoal()" class="bg-cyan-500 hover:bg-cyan-400 text-black font-bold px-4 py-2.5 rounded-xl text-xs transition shadow">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                    <div id="goalsListContainer" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
+                </div>
+            </div>
+
+            <!-- TAB 4: PROFILE & EARNED BONUSES ONLY -->
+            <div id="tabProfile" class="tab-pane hidden space-y-4">
+                <div class="glass-card rounded-3xl overflow-hidden shadow-2xl relative">
+                    <div id="profileBannerView" class="h-28 bg-gradient-to-r from-cyan-600 via-indigo-600 to-purple-600 relative bg-cover bg-center"></div>
+                    <div class="px-6 pb-6 text-center relative -mt-12 space-y-3">
+                        <div class="w-24 h-24 bg-gray-900 border-4 border-[#0b1329] rounded-2xl overflow-hidden mx-auto shadow-2xl flex items-center justify-center font-black text-4xl text-white bg-cover bg-center" id="profileAvatarView">
+                            A
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-black text-white" id="profileNameView">Арман Әлиев</h2>
+                            <p class="text-cyan-300 text-xs" id="profileEmailView">arman@example.com</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- EARNED BONUSES SUMMARY CARD -->
+                <div class="glass-card rounded-3xl p-4 bg-gradient-to-r from-indigo-950/60 via-purple-950/50 to-cyan-950/60 border border-cyan-500/40 text-center space-y-1">
+                    <div id="rewardsSummaryTitle" class="text-[10px] font-black text-cyan-300 uppercase tracking-wider">
+                        <i class="fa-solid fa-coins text-amber-400 mr-1"></i> Жиналған бонустар балансы
+                    </div>
+                    <div class="text-3xl font-black text-emerald-400 font-mono" id="totalEarnedBonuses">250 ₸</div>
+                    <div class="text-[10px] text-gray-400">Тек сәтті аяқталған фокус сессиялары үшін беріледі (1 мин = 12 ₸)</div>
+                </div>
+
+                <div class="glass-card rounded-3xl p-5 space-y-3 shadow-xl">
+                    <h3 id="profileSettingsTitle" class="text-sm font-bold text-white mb-2"><i class="fa-solid fa-pen-to-square text-cyan-400 mr-1.5"></i> Профильді баптау</h3>
+                    <div>
+                        <label id="lblEditName" class="block text-[10px] text-cyan-300 uppercase font-bold mb-1">Ник аты</label>
+                        <input type="text" id="editName" class="w-full bg-[#0b1329] border border-cyan-500/30 rounded-xl px-3.5 py-2 text-xs text-white shadow-inner">
+                    </div>
+                    <div>
+                        <label id="lblEditEmail" class="block text-[10px] text-cyan-300 uppercase font-bold mb-1">Email</label>
+                        <input type="email" id="editEmail" class="w-full bg-[#0b1329] border border-cyan-500/30 rounded-xl px-3.5 py-2 text-xs text-white shadow-inner">
+                    </div>
+                    <div>
+                        <label id="lblEditAvatar" class="block text-[10px] text-cyan-300 uppercase font-bold mb-1">Аватар суретін жүктеу</label>
+                        <input type="file" id="editAvatarFile" accept="image/*" class="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-[#111c38] file:text-cyan-300 hover:file:bg-[#162447] cursor-pointer">
+                    </div>
+                    <div>
+                        <label id="lblEditBanner" class="block text-[10px] text-cyan-300 uppercase font-bold mb-1">Баннер суретін жүктеу</label>
+                        <input type="file" id="editBannerFile" accept="image/*" class="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-[#111c38] file:text-cyan-300 hover:file:bg-[#162447] cursor-pointer">
+                    </div>
+                    <button onclick="saveProfile()" id="btnSaveProfile" class="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-bold py-2.5 rounded-xl text-xs transition shadow-lg glow-totoro">
+                        Өзгерістерді сақтау
+                    </button>
+                </div>
+
+                <button onclick="logoutUser()" id="btnLogout" class="w-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 font-bold py-3.5 rounded-2xl text-xs transition">
+                    Аккаунттан шығу
+                </button>
+            </div>
+
+            <!-- SUCCESS VIEW, MANDATORY ADS (5+ ADS) & 10 QUIZZES -->
+            <div id="rewardSection" class="hidden glass-card border border-emerald-400/40 rounded-3xl p-5 text-center shadow-2xl glow-emerald space-y-4 max-h-[82vh] overflow-y-auto">
+                <div>
+                    <h2 id="successTitle" class="text-xl font-black text-white">Құттықтаймыз! 🎉</h2>
+                    <p id="successDesc" class="text-xs text-gray-300 mt-0.5">Фокус сессиясы сәтті аяқталды!</p>
+                </div>
+
+                <div id="earnedBonusPopup" class="bg-[#0b1329] border border-emerald-400/30 p-2.5 rounded-2xl text-emerald-400 text-xs font-bold">
+                    +180 ₸ бонус қосылды!
+                </div>
+
+                <!-- MANDATORY ADS BLOCK (5+ ADS) -->
+                <div class="space-y-2 text-left">
+                    <div class="flex items-center justify-between px-1">
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider text-cyan-300"><i class="fa-solid fa-rectangle-ad text-amber-400 mr-1"></i> Серіктес Жарнамалар (5/5)</span>
+                        <span class="text-[9px] text-gray-400">Міндетті блок</span>
+                    </div>
+
+                    <!-- Ad 1 -->
+                    <div class="bg-[#0b1329] border border-cyan-500/20 p-2.5 rounded-xl flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-lg bg-orange-500/20 text-orange-400 flex items-center justify-center text-xs shrink-0"><i class="fa-solid fa-burger"></i></div>
+                            <div><div class="text-[11px] font-bold text-white">CoffeeBoom</div><div class="text-[9px] text-gray-400">Дәмді кофе мен круассандарға -20% жеңілдік!</div></div>
+                        </div>
+                        <span class="text-[9px] bg-cyan-500/10 text-cyan-400 px-2 py-1 rounded border border-cyan-500/20">Жарнама</span>
+                    </div>
+
+                    <!-- Ad 2 -->
+                    <div class="bg-[#0b1329] border border-cyan-500/20 p-2.5 rounded-xl flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center text-xs shrink-0"><i class="fa-solid fa-shirt"></i></div>
+                            <div><div class="text-[11px] font-bold text-white">Zara & Mango</div><div class="text-[9px] text-gray-400">Жаңа күзгі топтама сатылымда!</div></div>
+                        </div>
+                        <span class="text-[9px] bg-cyan-500/10 text-cyan-400 px-2 py-1 rounded border border-cyan-500/20">Жарнама</span>
+                    </div>
+
+                    <!-- Ad 3 -->
+                    <div class="bg-[#0b1329] border border-cyan-500/20 p-2.5 rounded-xl flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center text-xs shrink-0"><i class="fa-solid fa-graduation-cap"></i></div>
+                            <div><div class="text-[11px] font-bold text-white">Coursera Plus</div><div class="text-[9px] text-gray-400">IT және Data Science курстарын тегін көріңіз!</div></div>
+                        </div>
+                        <span class="text-[9px] bg-cyan-500/10 text-cyan-400 px-2 py-1 rounded border border-cyan-500/20">Жарнама</span>
+                    </div>
+
+                    <!-- Ad 4 -->
+                    <div class="bg-[#0b1329] border border-cyan-500/20 p-2.5 rounded-xl flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs shrink-0"><i class="fa-solid fa-book"></i></div>
+                            <div><div class="text-[11px] font-bold text-white">Meloman</div><div class="text-[9px] text-gray-400">Бизнес кітаптарға промокод арқылы тегін жеткізу!</div></div>
+                        </div>
+                        <span class="text-[9px] bg-cyan-500/10 text-cyan-400 px-2 py-1 rounded border border-cyan-500/20">Жарнама</span>
+                    </div>
+
+                    <!-- Ad 5 -->
+                    <div class="bg-[#0b1329] border border-cyan-500/20 p-2.5 rounded-xl flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xs shrink-0"><i class="fa-solid fa-laptop-code"></i></div>
+                            <div><div class="text-[11px] font-bold text-white">Technodom</div><div class="text-[9px] text-gray-400">Планшеттер мен ноутбуктерге 0-0-12 бөліп төлеу!</div></div>
+                        </div>
+                        <span class="text-[9px] bg-cyan-500/10 text-cyan-400 px-2 py-1 rounded border border-cyan-500/20">Жарнама</span>
+                    </div>
+                </div>
+
+                <!-- 10 QUIZZES BLOCK -->
+                <div class="space-y-3 text-left pt-2 border-t border-cyan-500/30">
+                    <div class="flex items-center justify-between px-1">
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider text-purple-300"><i class="fa-solid fa-circle-question text-amber-400 mr-1"></i> Жарнамалар бойынша 10 квиз</span>
+                        <span id="quizScoreBadge" class="text-[9px] bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded border border-purple-500/30">Ұпай: 0/10</span>
+                    </div>
+
+                    <div id="quizContainer" class="space-y-3">
+                        <!-- Quizzes will be injected by JavaScript -->
+                    </div>
+                </div>
+
+                <button onclick="returnToMain()" id="btnReturnMain" class="w-full bg-cyan-500 text-black font-bold py-3 rounded-xl text-xs shadow-lg glow-emerald transition hover:bg-cyan-400 mt-2">Басты бетке қайту</button>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- ANTI-CHEAT MODAL -->
+    <div id="cheatModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-card border border-red-500/50 rounded-3xl p-6 max-w-sm w-full text-center space-y-4 shadow-2xl">
+            <div class="w-16 h-16 bg-red-500/10 border border-red-500/30 text-red-400 rounded-2xl flex items-center justify-center mx-auto text-3xl">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div>
+                <h3 id="cheatTitle" class="text-xl font-black text-white">Фокус бұзылды!</h3>
+                <p id="cheatDesc" class="text-gray-300 text-xs mt-2">Басқа вкладкаға ауысқандықтан сессия тоқтатылды.</p>
+            </div>
+            <button onclick="closeCheatModal()" id="btnRestart" class="w-full bg-red-600 text-white font-bold py-3 rounded-xl transition text-xs shadow-lg">
+                Қайтадан бастау
+            </button>
+        </div>
+    </div>
+
+    <!-- ARCADE GAME MODAL -->
+    <div id="arcadeGameModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-card border border-cyan-500/40 rounded-3xl p-6 max-w-sm w-full text-center space-y-4 shadow-2xl">
+            <div class="flex items-center justify-between">
+                <h3 id="arcadeTitle" class="text-base font-bold text-white">Аркада Ойыны</h3>
+                <button onclick="closeArcadeGame()" class="text-gray-400 hover:text-white text-sm"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="arcadeBody" class="py-2 text-xs text-gray-200">Ойын жүктелуде...</div>
+            <button onclick="closeArcadeGame()" id="btnCloseArcade" class="w-full bg-[#111c38] border border-cyan-500/30 text-gray-300 py-2.5 rounded-xl text-xs transition hover:bg-[#162447]">Ойынды жабу</button>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <nav id="bottomNav" class="hidden border-t border-cyan-500/20 bg-[#0b1329]/90 backdrop-blur-md sticky bottom-0 z-40">
+        <div class="max-w-md mx-auto px-6 py-3 flex justify-around">
+            <button onclick="switchTab('main')" id="navMain" class="flex flex-col items-center text-cyan-400 transition">
+                <i class="fa-solid fa-house text-sm"></i>
+                <span id="navHomeText" class="text-[10px] mt-1 font-semibold">Басты бет</span>
+            </button>
+            <button onclick="switchTab('timer')" id="navTimerBtn" class="hidden flex flex-col items-center text-gray-400 hover:text-white transition">
+                <i class="fa-solid fa-clock text-sm"></i>
+                <span id="navTimerText" class="text-[10px] mt-1 font-semibold">Фокус</span>
+            </button>
+            <button onclick="switchTab('goals')" id="navGoals" class="flex flex-col items-center text-gray-400 hover:text-white transition">
+                <i class="fa-solid fa-bullseye text-sm"></i>
+                <span id="navGoalsText" class="text-[10px] mt-1 font-semibold">Мақсаттар</span>
+            </button>
+            <button onclick="switchTab('profile')" id="navProfile" class="flex flex-col items-center text-gray-400 hover:text-white transition">
+                <i class="fa-solid fa-user text-sm"></i>
+                <span id="navProfileText" class="text-[10px] mt-1 font-semibold">Кабинет</span>
+            </button>
+        </div>
+    </nav>
+
+    <script>
+        const translations = {
+            kk: {
+                navSubtitle: "Totoro Focus",
+                regTitle: "Зейініңді Шыңда!",
+                regSubtitle: "Премиум фокус жүйесі және AI жоспарлаушы",
+                lblCat: "Категория",
+                lblPlan: "Жоспарлау",
+                labelName: "Ник аты *",
+                labelEmail: "Email *",
+                btnEnter: "Жүйеге кіру",
+                lblOr: "немесе әлеуметтік желі арқылы",
+                lblMotTitle: "Жалпы мотивация",
+                lblFocusTitle: "Фокус сессиясы",
+                lblFocusDesc: "Бренд категориясын таңдап, фокусты бастаңыз!",
+                lblSelectBrand: "1. Бренд Категориясын таңдаңыз:",
+                lblSelectTime: "2. Ұзақтығын таңдаңыз (1 мин = 12 ₸):",
+                catFood: "Тамақ", catFashion: "Киім", catEdu: "Білім", catBooks: "Кітаптар", catTech: "Техника", catSport: "Спорт",
+                minText: "Мин",
+                antiCheatMsg: "<strong>Анти-чит белсенді:</strong> Басқа вкладкаға шықсаңыз сессия бұзылады!",
+                lblTimerActive: "Фокус уақыты жүріп жатыр",
+                lblArcadeHub: "Аркада Мини-Ойындары (Демалыс)",
+                gameSnakeName: "Ретро Жыланша",
+                gameClickerName: "Неон Кликер",
+                aiPlannerTitle: "ZEYIN AI Жоспарлаушысы",
+                aiPlannerSubtitle: "Немен айналысқыңыз келеді? (Мысалы: «Экзаменге дайындық»)",
+                aiInputPlaceholder: "Тақырыпты жазыңыз...",
+                btnGenerateAI: "Жоспар құру ✦",
+                goalsHeaderTitle: "Менің мақсаттарым",
+                goalInputPlaceholder: "Мақсат жазу...",
+                rewardsSummaryTitle: "Жиналған бонустар балансы",
+                profileSettingsTitle: "Профильді баптау",
+                lblEditName: "Ник аты",
+                lblEditEmail: "Email",
+                lblEditAvatar: "Аватар суретін жүктеу",
+                lblEditBanner: "Баннер суретін жүктеу",
+                btnSaveProfile: "Өзгерістерді сақтау",
+                btnLogout: "Аккаунттан шығу",
+                successTitle: "Құттықтаймыз! 🎉",
+                successDesc: "Фокус сессиясы сәтті аяқталды!",
+                btnReturnMain: "Басты бетке қайту",
+                cheatTitle: "Фокус бұзылды!",
+                cheatDesc: "Басқа вкладкаға ауысқандықтан сессия тоқтатылды.",
+                btnRestart: "Қайтадан бастау",
+                btnCloseArcade: "Ойынды жабу",
+                navHomeText: "Басты бет",
+                navTimerText: "Фокус",
+                navGoalsText: "Мақсаттар",
+                navProfileText: "Кабинет",
+                motivations: [
+                    "«Әрбір үлкен жетістік кішкентай ғана қадамнан басталады!»",
+                    "«Уақыт — ең қымбат ресурс, оны дұрыс бағытта жұмса! 🚀»",
+                    "«Мақсатыңа сенсең, кез келген белесті бағындыра аласың!»"
+                ]
+            },
+            ru: {
+                navSubtitle: "Totoro Focus",
+                regTitle: "Прокачай Фокус!",
+                regSubtitle: "Премиум фокус-система и AI планировщик",
+                lblCat: "Категории",
+                lblPlan: "Планы",
+                labelName: "Имя (Ник) *",
+                labelEmail: "Email *",
+                btnEnter: "Войти в систему",
+                lblOr: "или через социальные сети",
+                lblMotTitle: "Общая мотивация",
+                lblFocusTitle: "Фокус-сессия",
+                lblFocusDesc: "Выберите бренд-категорию и начните фокус!",
+                lblSelectBrand: "1. Выберите бренд-категорию:",
+                lblSelectTime: "2. Выберите длительность (1 мин = 12 ₸):",
+                catFood: "Еда", catFashion: "Стиль", catEdu: "Обучение", catBooks: "Книги", catTech: "Техника", catSport: "Спорт",
+                minText: "Мин",
+                antiCheatMsg: "<strong>Анти-чит активен:</strong> Переключение вкладки прервет сессию!",
+                lblTimerActive: "Идет фокус-сессия",
+                lblArcadeHub: "Аркада Мини-Игры (Отдых)",
+                gameSnakeName: "Ретро Змейка",
+                gameClickerName: "Неон Кликер",
+                aiPlannerTitle: "ZEYIN AI Планировщик",
+                aiPlannerSubtitle: "Чем хотите заняться? (Пример: «Подготовка к экзамену»)",
+                aiInputPlaceholder: "Введите тему...",
+                btnGenerateAI: "Создать план ✦",
+                goalsHeaderTitle: "Мои цели",
+                goalInputPlaceholder: "Новая цель...",
+                rewardsSummaryTitle: "Баланс заработанных бонусов",
+                profileSettingsTitle: "Настройки профиля",
+                lblEditName: "Имя / Ник",
+                lblEditEmail: "Email",
+                lblEditAvatar: "Загрузить аватар",
+                lblEditBanner: "Загрузить баннер",
+                btnSaveProfile: "Сохранить изменения",
+                btnLogout: "Выйти из аккаунта",
+                successTitle: "Поздравляем! 🎉",
+                successDesc: "Фокус-сессия успешно завершена!",
+                btnReturnMain: "На главную",
+                cheatTitle: "Фокус сброшен!",
+                cheatDesc: "Сессия прервана из-за переключения вкладки.",
+                btnRestart: "Начать заново",
+                btnCloseArcade: "Закрыть игру",
+                navHomeText: "Главная",
+                navTimerText: "Фокус",
+                navGoalsText: "Цели",
+                navProfileText: "Кабинет",
+                motivations: [
+                    "«Каждый великий успех начинается с маленького шага!»",
+                    "«Время — самый ценный ресурс, используйте его с умом! 🚀»",
+                    "«Верьте в свою цель, и любая вершина покорится!»"
+                ]
+            },
+            en: {
+                navSubtitle: "Totoro Focus",
+                regTitle: "Boost Your Focus!",
+                regSubtitle: "Premium focus system & AI planner",
+                lblCat: "Categories",
+                lblPlan: "Planning",
+                labelName: "Nickname *",
+                labelEmail: "Email *",
+                btnEnter: "Get Started",
+                lblOr: "or sign in with",
+                lblMotTitle: "General Motivation",
+                lblFocusTitle: "Focus Session",
+                lblFocusDesc: "Select a brand category and start focusing!",
+                lblSelectBrand: "1. Select Brand Category:",
+                lblSelectTime: "2. Select Duration (1 min = 12 ₸):",
+                catFood: "Food", catFashion: "Fashion", catEdu: "Education", catBooks: "Books", catTech: "Tech", catSport: "Sport",
+                minText: "Min",
+                antiCheatMsg: "<strong>Anti-cheat active:</strong> Switching tabs will break the session!",
+                lblTimerActive: "Focus session in progress",
+                lblArcadeHub: "Arcade Mini-Games (Break)",
+                gameSnakeName: "Retro Snake",
+                gameClickerName: "Neon Clicker",
+                aiPlannerTitle: "ZEYIN AI Planner",
+                aiPlannerSubtitle: "What do you want to do? (e.g., 'Exam preparation')",
+                aiInputPlaceholder: "Enter topic...",
+                btnGenerateAI: "Generate Plan ✦",
+                goalsHeaderTitle: "My Goals",
+                goalInputPlaceholder: "Add a goal...",
+                rewardsSummaryTitle: "Earned Bonuses Balance",
+                profileSettingsTitle: "Profile Settings",
+                lblEditName: "Nickname",
+                lblEditEmail: "Email",
+                lblEditAvatar: "Upload Avatar",
+                lblEditBanner: "Upload Banner",
+                btnSaveProfile: "Save Changes",
+                btnLogout: "Log Out",
+                successTitle: "Congratulations! 🎉",
+                successDesc: "Focus session completed successfully!",
+                btnReturnMain: "Back to Home",
+                cheatTitle: "Focus Broken!",
+                cheatDesc: "Session was terminated because you switched tabs.",
+                btnRestart: "Restart",
+                btnCloseArcade: "Close Game",
+                navHomeText: "Home",
+                navTimerText: "Focus",
+                navGoalsText: "Goals",
+                navProfileText: "Profile",
+                motivations: [
+                    "«Every great achievement starts with a small step!»",
+                    "«Time is your most valuable resource, spend it wisely! 🚀»",
+                    "«Believe in your goal and you will conquer any peak!»"
+                ]
+            }
+        };
+
+        const adQuizzes = [
+            { q: "1. CoffeeBoom жарнамасында қандай жеңілдік ұсынылды?", opts: ["-10%", "-20%", "-50%"], correct: 1 },
+            { q: "2. CoffeeBoom жарнамасында кофемен бірге не ұсынылды?", opts: ["Круассандар", "Бургерлер", "Торттар"], correct: 0 },
+            { q: "3. Қай киім брендінің жарнамасы көрсетілді?", opts: ["LC Waikiki", "Zara & Mango", "Koton"], correct: 1 },
+            { q: "4. Zara & Mango жарнамасында қандай топтама ұсынылды?", opts: ["Жазғы топтама", "Күзгі топтама", "Қысқы топтама"], correct: 1 },
+            { q: "5. Қай білім платформасының жарнамасы берілді?", opts: ["Coursera Plus", "Udemy", "Stepik"], correct: 0 },
+            { q: "6. Coursera жарнамасында қандай бағыттар ұсынылды?", opts: ["IT және Data Science", "Медицина", "Дизайн"], correct: 0 },
+            { q: "7. Қай кітап дүкені жарнамаланды?", opts: ["Meloman", "Marwin", "KitapAl"], correct: 0 },
+            { q: "8. Meloman жарнамасында не тегін жеткізілді?", opts: ["Барлық тауарлар", "Бизнес кітаптар (промокодпен)", "Ойыншықтар"], correct: 1 },
+            { q: "9. Техника дүкенінің атауы қандай?", opts: ["Technodom", "Sulpak", "Alser"], correct: 0 },
+            { q: "10. Technodom жарнамасында қандай төлем түрі бар?", opts: ["0-0-12 бөліп төлеу", "Кэшбэк 50%", "Тегін сыйлық"], correct: 0 }
+        ];
+
+        let currentLang = 'kk';
+
+        function changeLanguage(lang) {
+            currentLang = lang;
+            const t = translations[lang];
+
+            document.getElementById('navSubtitle').innerText = t.navSubtitle;
+            document.getElementById('regTitle').innerText = t.regTitle;
+            document.getElementById('regSubtitle').innerText = t.regSubtitle;
+            document.getElementById('lblCat').innerText = t.lblCat;
+            document.getElementById('lblPlan').innerText = t.lblPlan;
+            document.getElementById('labelName').innerText = t.labelName;
+            document.getElementById('labelEmail').innerText = t.labelEmail;
+            document.getElementById('btnEnter').innerHTML = `${t.btnEnter} <i class="fa-solid fa-arrow-right ml-2"></i>`;
+            document.getElementById('lblOr').innerText = t.lblOr;
+
+            document.getElementById('lblMotTitle').innerHTML = `<i class="fa-solid fa-bolt mr-1"></i> ${t.lblMotTitle}`;
+            document.getElementById('lblFocusTitle').innerText = t.lblFocusTitle;
+            document.getElementById('lblFocusDesc').innerText = t.lblFocusDesc;
+            document.getElementById('lblSelectBrand').innerText = t.lblSelectBrand;
+            document.getElementById('lblSelectTime').innerText = t.lblSelectTime;
+
+            document.querySelectorAll('.cat-food-title')[0].innerText = t.catFood;
+            document.querySelectorAll('.cat-fashion-title')[0].innerText = t.catFashion;
+            document.querySelectorAll('.cat-edu-title')[0].innerText = t.catEdu;
+            document.querySelectorAll('.cat-books-title')[0].innerText = t.catBooks;
+            document.querySelectorAll('.cat-tech-title')[0].innerText = t.catTech;
+            document.querySelectorAll('.cat-sport-title')[0].innerText = t.catSport;
+
+            document.getElementById('antiCheatMsg').innerHTML = t.antiCheatMsg;
+            document.getElementById('lblTimerActive').innerText = t.lblTimerActive;
+            document.getElementById('lblArcadeHub').innerHTML = `<i class="fa-solid fa-gamepad text-amber-400"></i> ${t.lblArcadeHub}`;
+            document.getElementById('gameSnakeName').innerText = t.gameSnakeName;
+            document.getElementById('gameClickerName').innerText = t.gameClickerName;
+
+            document.getElementById('aiPlannerTitle').innerHTML = `<i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i> ${t.aiPlannerTitle}`;
+            document.getElementById('aiPlannerSubtitle').innerText = t.aiPlannerSubtitle;
+            document.getElementById('aiTopicInput').placeholder = t.aiInputPlaceholder;
+            document.getElementById('btnGenerateAI').innerText = t.btnGenerateAI;
+
+            document.getElementById('goalsHeaderTitle').innerHTML = `<i class="fa-solid fa-bullseye text-cyan-300"></i> ${t.goalsHeaderTitle}`;
+            document.getElementById('newGoalInput').placeholder = t.goalInputPlaceholder;
+
+            document.getElementById('rewardsSummaryTitle').innerHTML = `<i class="fa-solid fa-coins text-amber-400 mr-1"></i> ${t.rewardsSummaryTitle}`;
+            document.getElementById('profileSettingsTitle').innerHTML = `<i class="fa-solid fa-pen-to-square text-cyan-400 mr-1.5"></i> ${t.profileSettingsTitle}`;
+            document.getElementById('lblEditName').innerText = t.lblEditName;
+            document.getElementById('lblEditEmail').innerText = t.lblEditEmail;
+            document.getElementById('lblEditAvatar').innerText = t.lblEditAvatar;
+            document.getElementById('lblEditBanner').innerText = t.lblEditBanner;
+            document.getElementById('btnSaveProfile').innerText = t.btnSaveProfile;
+            document.getElementById('btnLogout').innerText = t.btnLogout;
+
+            document.getElementById('successTitle').innerText = t.successTitle;
+            document.getElementById('successDesc').innerText = t.successDesc;
+            document.getElementById('btnReturnMain').innerText = t.btnReturnMain;
+
+            document.getElementById('cheatTitle').innerText = t.cheatTitle;
+            document.getElementById('cheatDesc').innerText = t.cheatDesc;
+            document.getElementById('btnRestart').innerText = t.btnRestart;
+            document.getElementById('btnCloseArcade').innerText = t.btnCloseArcade;
+
+            document.getElementById('navHomeText').innerText = t.navHomeText;
+            document.getElementById('navTimerText').innerText = t.navTimerText;
+            document.getElementById('navGoalsText').innerText = t.navGoalsText;
+            document.getElementById('navProfileText').innerText = t.navProfileText;
+
+            const motList = t.motivations;
+            document.getElementById('dailyMotivationText').innerText = motList[Math.floor(Math.random() * motList.length)];
+        }
+
+        let currentUser = JSON.parse(localStorage.getItem('zeyin_user')) || null;
+        let stats = JSON.parse(localStorage.getItem('zeyin_stats')) || { sessions: 0, minutes: 0 };
+        let userBonus = Number(localStorage.getItem('zeyin_bonus')) || 250;
+        let goals = JSON.parse(localStorage.getItem('zeyin_goals')) || [{ text: "Математика  оқу", completed: false }];
+        let selectedCategories = ['food'];
+        let selectedMinutes = 25;
+        let earnedCurrentSession = 300;
+        let quizAnswers = {};
+
+        const brandNames = {
+            food: 'CoffeeBoom (Тамақ)',
+            fashion: 'Zara & Mango (Киім)',
+            education: 'Coursera (Білім)',
+            books: 'Meloman (Кітаптар)',
+            tech: 'Technodom (Техника)',
+            sport: 'World Class (Спорт)'
+        };
+
+        window.onload = function() {
+            if(currentUser) loginSuccessUI();
+            renderGoals();
+            updateBonusUI();
+            changeLanguage('kk');
+        }
+
+        function updateBonusUI() {
+            document.getElementById('totalEarnedBonuses').innerText = `${userBonus.toLocaleString()} ₸`;
+        }
+
+        document.getElementById('regForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('regName').value.trim();
+            const contact = document.getElementById('regContact').value.trim();
+            if(!name || !contact) return;
+            currentUser = { name, email: contact, avatar: '', banner: '' };
+            localStorage.setItem('zeyin_user', JSON.stringify(currentUser));
+            loginSuccessUI();
+        });
+
+        function socialLogin(provider) {
+            const inputName = prompt(`${provider} арқылы кіру үшін аты-жөніңізді енгізіңіз:`);
+            if(!inputName || inputName.trim() === "") return;
+            currentUser = { name: inputName.trim(), email: `${provider.toLowerCase()}_user@auth.com`, avatar: '', banner: '' };
+            localStorage.setItem('zeyin_user', JSON.stringify(currentUser));
+            loginSuccessUI();
+        }
+
+        function loginSuccessUI() {
+            document.getElementById('registerSection').classList.add('hidden');
+            document.getElementById('dashboardContainer').classList.remove('hidden');
+            document.getElementById('bottomNav').classList.remove('hidden');
+            document.getElementById('navTimerBtn').classList.remove('hidden');
+            
+            document.getElementById('navUserName').innerText = currentUser.name;
+            document.getElementById('profileNameView').innerText = currentUser.name;
+            document.getElementById('profileEmailView').innerText = currentUser.email;
+            
+            document.getElementById('editName').value = currentUser.name;
+            document.getElementById('editEmail').value = currentUser.email;
+
+            updateAvatarAndBanner();
+            updateBonusUI();
+        }
+
+        function updateAvatarAndBanner() {
+            const avatarEl = document.getElementById('profileAvatarView');
+            if(currentUser.avatar) {
+                avatarEl.style.backgroundImage = `url(${currentUser.avatar})`;
+                avatarEl.innerText = '';
+            } else {
+                avatarEl.style.backgroundImage = '';
+                avatarEl.innerText = currentUser.name[0].toUpperCase();
+            }
+
+            const bannerEl = document.getElementById('profileBannerView');
+            if(currentUser.banner) {
+                bannerEl.style.backgroundImage = `url(${currentUser.banner})`;
+            } else {
+                bannerEl.style.backgroundImage = '';
+            }
+        }
+
+        function saveProfile() {
+            currentUser.name = document.getElementById('editName').value.trim();
+            currentUser.email = document.getElementById('editEmail').value.trim();
+
+            const avatarFile = document.getElementById('editAvatarFile').files[0];
+            const bannerFile = document.getElementById('editBannerFile').files[0];
+
+            let pendingSaves = 0;
+
+            if(avatarFile) {
+                pendingSaves++;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    currentUser.avatar = e.target.result;
+                    checkDone();
+                };
+                reader.readAsDataURL(avatarFile);
+            }
+
+            if(bannerFile) {
+                pendingSaves++;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    currentUser.banner = e.target.result;
+                    checkDone();
+                };
+                reader.readAsDataURL(bannerFile);
+            }
+
+            if(pendingSaves === 0) finalizeSave();
+
+            function checkDone() {
+                pendingSaves--;
+                if(pendingSaves === 0) finalizeSave();
+            }
+
+            function finalizeSave() {
+                localStorage.setItem('zeyin_user', JSON.stringify(currentUser));
+                loginSuccessUI();
+                alert('Профиль мен суреттер сәтті сақталды!');
+            }
+        }
+
+        function logoutUser() {
+            localStorage.removeItem('zeyin_user');
+            location.reload();
+        }
+
+        function switchTab(tabName) {
+            ['tabMain', 'tabTimer', 'tabGoals', 'tabProfile', 'rewardSection'].forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.classList.add('hidden');
+            });
+            if(tabName === 'main') document.getElementById('tabMain').classList.remove('hidden');
+            else if(tabName === 'timer') document.getElementById('tabTimer').classList.remove('hidden');
+            else if(tabName === 'goals') document.getElementById('tabGoals').classList.remove('hidden');
+            else if(tabName === 'profile') document.getElementById('tabProfile').classList.remove('hidden');
+        }
+
+        function toggleCategory(cat) {
+            const idx = selectedCategories.indexOf(cat);
+            if (idx > -1) {
+                if (selectedCategories.length > 1) selectedCategories.splice(idx, 1);
+            } else {
+                selectedCategories.push(cat);
+            }
+            ['food', 'fashion', 'education', 'books', 'tech', 'sport'].forEach(c => {
+                const btn = document.getElementById(`cat-${c}`);
+                if(btn) {
+                    if (selectedCategories.includes(c)) btn.classList.add('cat-selected');
+                    else btn.classList.remove('cat-selected');
+                }
+            });
+        }
+
+        let totalDurationSeconds = 1500;
+        let endTime = 0;
+        let timerInterval = null;
+        let isSessionActive = false;
+
+        function selectDuration(mins) {
+            selectedMinutes = mins;
+            totalDurationSeconds = mins * 60;
+            endTime = Date.now() + (totalDurationSeconds * 1000);
+            
+            // 1 минут = 12 теңге формуласы
+            earnedCurrentSession = mins * 12;
+
+            const activeCategory = selectedCategories[0] || 'food';
+            document.getElementById('activeBrandLabel').innerText = `Бренд: ${brandNames[activeCategory]}`;
+
+            switchTab('timer');
+            startTimer();
+        }
+
+        function startTimer() {
+            isSessionActive = true;
+            if (timerInterval) clearInterval(timerInterval);
+
+            timerInterval = setInterval(() => {
+                const now = Date.now();
+                const secondsLeft = Math.max(0, Math.floor((endTime - now) / 1000));
+                updateTimerDisplay(secondsLeft);
+
+                if (secondsLeft <= 0) {
+                    clearInterval(timerInterval);
+                    isSessionActive = false;
+                    finishSession();
+                }
+            }, 500);
+        }
+
+        function updateTimerDisplay(secondsLeft) {
+            const mins = Math.floor(secondsLeft / 60);
+            const secs = secondsLeft % 60;
+            const disp = document.getElementById('timerDisplay');
+            if(disp) disp.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            
+            const prog = document.getElementById('timerProgress');
+            if(prog) prog.style.width = `${(secondsLeft / totalDurationSeconds) * 100}%`;
+        }
+
+        // --- ARCADE MINI GAMES (NO MONEY) ---
+        function openArcadeGame(type) {
+            document.getElementById('arcadeGameModal').classList.remove('hidden');
+            const title = document.getElementById('arcadeTitle');
+            const body = document.getElementById('arcadeBody');
+
+            if(type === 'snake') {
+                title.innerText = "👾 Ретро Жыланша (Демалыс ойыны)";
+                body.innerHTML = `
+                    <p class="mb-2 text-cyan-400 font-bold text-[11px]">Жыланша тек көңіл көтеру үшін ойналады!</p>
+                    <div class="bg-[#0b1329] border border-cyan-500/30 p-6 rounded-2xl text-center font-mono text-xs my-2 space-y-2">
+                        <div class="text-gray-400">Жемістер жиналды: <span id="snakeScore" class="text-emerald-400 font-bold">0</span></div>
+                        <button onclick="feedSnake()" class="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-black py-2 rounded-xl transition active:scale-95 shadow">🍎 Жемісті жеу (+1 ұпай)</button>
+                    </div>
+                `;
+            } else if(type === 'clicker') {
+                title.innerText = "⚡ Неон Кликер (Демалыс ойыны)";
+                body.innerHTML = `
+                    <div class="space-y-3">
+                        <div class="flex justify-between text-xs text-gray-400 font-bold px-1">
+                            <span>Уақыт: <strong id="arcadeTimer" class="text-amber-400">10</strong>с</span>
+                            <span>Ұпай: <strong id="arcadeScore" class="text-cyan-400 font-mono text-base">0</strong></span>
+                        </div>
+                        <button id="arcadeClickBtn" onclick="clickArcade()" disabled class="w-full bg-[#111c38] border border-cyan-500/30 text-gray-400 py-6 rounded-2xl font-black text-sm transition active:scale-95 shadow-lg">
+                            Бастау үшін төмендегі батырманы бас!
+                        </button>
+                        <button id="arcadeStartBtn" onclick="startArcadeClicker()" class="w-full bg-gradient-to-r from-cyan-500 to-indigo-600 text-white font-bold py-2.5 rounded-xl text-xs transition shadow">
+                            Ойынды бастау 🚀
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        let snakeScoreVal = 0;
+        function feedSnake() {
+            snakeScoreVal++;
+            document.getElementById('snakeScore').innerText = snakeScoreVal;
+        }
+
+        let arcadeActive = false;
+        let arcadeScoreVal = 0;
+        let arcadeTimeLeft = 10;
+        let arcadeInterval = null;
+
+        function startArcadeClicker() {
+            arcadeScoreVal = 0;
+            arcadeTimeLeft = 10;
+            arcadeActive = true;
+            document.getElementById('arcadeScore').innerText = '0';
+            document.getElementById('arcadeTimer').innerText = '10';
+            
+            const btn = document.getElementById('arcadeClickBtn');
+            btn.disabled = false;
+            btn.className = "w-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-purple-500 text-black font-black py-6 rounded-2xl text-base transition active:scale-90 shadow-xl cursor-pointer";
+            btn.innerText = "ТЕЗ-ТЕЗ БАС!";
+            
+            document.getElementById('arcadeStartBtn').classList.add('hidden');
+
+            if(arcadeInterval) clearInterval(arcadeInterval);
+
+            arcadeInterval = setInterval(() => {
+                arcadeTimeLeft--;
+                document.getElementById('arcadeTimer').innerText = arcadeTimeLeft;
+                if(arcadeTimeLeft <= 0) {
+                    clearInterval(arcadeInterval);
+                    arcadeActive = false;
+                    btn.disabled = true;
+                    btn.className = "w-full bg-[#111c38] border border-cyan-500/30 text-gray-400 py-6 rounded-2xl font-bold text-xs";
+                    btn.innerText = `Уақыт бітті! Жиналған ұпай: ${arcadeScoreVal}`;
+                    document.getElementById('arcadeStartBtn').classList.remove('hidden');
+                    document.getElementById('arcadeStartBtn').innerText = "Қайтадан ойнау";
+                }
+            }, 1000);
+        }
+
+        function clickArcade() {
+            if(!arcadeActive) return;
+            arcadeScoreVal++;
+            document.getElementById('arcadeScore').innerText = arcadeScoreVal;
+        }
+
+        function closeArcadeGame() {
+            if(arcadeInterval) clearInterval(arcadeInterval);
+            document.getElementById('arcadeGameModal').classList.add('hidden');
+        }
+
+        // --- ANTI-CHEAT LISTENERS ---
+        document.addEventListener('visibilitychange', () => {
+            if (isSessionActive && document.hidden) {
+                triggerCheatDetection();
+            }
+        });
+
+        window.addEventListener('blur', () => {
+            if (isSessionActive) {
+                triggerCheatDetection();
+            }
+        });
+
+        function triggerCheatDetection() {
+            if(!isSessionActive) return;
+            clearInterval(timerInterval);
+            isSessionActive = false;
+            document.getElementById('cheatModal').classList.remove('hidden');
+        }
+
+        function closeCheatModal() {
+            document.getElementById('cheatModal').classList.add('hidden');
+            switchTab('main');
+        }
+
+        // --- AI PLANNER ---
+        function generateAIPlan() {
+            const topic = document.getElementById('aiTopicInput').value.trim();
+            if(!topic) {
+                alert('Жоспар құру үшін тақырыпты енгізіңіз!');
+                return;
+            }
+
+            const aiSteps = [
+                `[AI] ${topic}: Теориялық қадам (25 мин)`,
+                `[AI] ${topic}: Практикалық қадам (25 мин)`,
+                `[AI] ${topic}: Қорытындылау (15 мин)`
+            ];
+
+            aiSteps.forEach(step => {
+                goals.push({ text: step, completed: false });
+            });
+
+            localStorage.setItem('zeyin_goals', JSON.stringify(goals));
+            document.getElementById('aiTopicInput').value = '';
+            renderGoals();
+            alert('ZEYIN AI тақырып бойынша жеке фокус-жоспар құрды!');
+        }
+
+        function addGoal() {
+            const input = document.getElementById('newGoalInput');
+            const val = input.value.trim();
+            if(!val) return;
+            goals.push({ text: val, completed: false });
+            localStorage.setItem('zeyin_goals', JSON.stringify(goals));
+            input.value = '';
+            renderGoals();
+        }
+
+        function toggleGoal(i) {
+            goals[i].completed = !goals[i].completed;
+            localStorage.setItem('zeyin_goals', JSON.stringify(goals));
+            renderGoals();
+        }
+
+        function deleteGoal(i) {
+            goals.splice(i, 1);
+            localStorage.setItem('zeyin_goals', JSON.stringify(goals));
+            renderGoals();
+        }
+
+        function renderGoals() {
+            const container = document.getElementById('goalsListContainer');
+            if(!container) return;
+            container.innerHTML = goals.map((g, idx) => `
+                <div class="flex items-center justify-between bg-[#0b1329] border border-cyan-500/30 p-2.5 rounded-xl text-xs shadow-inner">
+                    <div class="flex items-center gap-2.5 overflow-hidden">
+                        <input type="checkbox" ${g.completed ? 'checked' : ''} onchange="toggleGoal(${idx})" class="accent-cyan-400 w-4 h-4 rounded cursor-pointer shrink-0">
+                        <span class="${g.completed ? 'line-through text-gray-500' : 'text-gray-200'} truncate">${g.text}</span>
+                    </div>
+                    <button onclick="deleteGoal(${idx})" class="text-red-400 hover:text-red-300 px-2 py-1 transition shrink-0" title="Жою">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
+            `).join('');
+            document.getElementById('goalStatsBadge').innerText = `${goals.filter(x=>x.completed).length}/${goals.length} орындалды`;
+        }
+
+        // --- 10 QUIZZES RENDER ---
+        function renderQuizzes() {
+            quizAnswers = {};
+            const container = document.getElementById('quizContainer');
+            container.innerHTML = adQuizzes.map((quiz, qIdx) => `
+                <div class="bg-[#0b1329] border border-cyan-500/20 p-3 rounded-xl space-y-2">
+                    <div class="text-[11px] font-bold text-white">${quiz.q}</div>
+                    <div class="grid grid-cols-3 gap-1.5">
+                        ${quiz.opts.map((opt, oIdx) => `
+                            <button onclick="answerQuiz(${qIdx}, ${oIdx})" id="q${qIdx}o${oIdx}" class="bg-[#111c38] hover:bg-[#162447] border border-cyan-500/20 py-1.5 px-2 rounded-lg text-[10px] text-gray-300 transition text-center truncate">
+                                ${opt}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+            updateQuizScore();
+        }
+
+        function answerQuiz(qIdx, oIdx) {
+            quizAnswers[qIdx] = oIdx;
+            const quiz = adQuizzes[qIdx];
+            quiz.opts.forEach((_, optIdx) => {
+                const btn = document.getElementById(`q${qIdx}o${optIdx}`);
+                btn.className = "bg-[#111c38] hover:bg-[#162447] border border-cyan-500/20 py-1.5 px-2 rounded-lg text-[10px] text-gray-300 transition text-center truncate";
+                if(optIdx === oIdx) {
+                    if(oIdx === quiz.correct) {
+                        btn.classList.add('bg-emerald-500/20', 'border-emerald-400', 'text-emerald-300', 'font-bold');
+                    } else {
+                        btn.classList.add('bg-red-500/20', 'border-red-400', 'text-red-300', 'font-bold');
+                    }
+                }
+            });
+            updateQuizScore();
+        }
+
+        function updateQuizScore() {
+            let correctCount = 0;
+            Object.keys(quizAnswers).forEach(qIdx => {
+                if(quizAnswers[qIdx] === adQuizzes[qIdx].correct) {
+                    correctCount++;
+                }
+            });
+            document.getElementById('quizScoreBadge').innerText = `Ұпай: ${correctCount}/10`;
+        }
+
+        function finishSession() {
+            stats.sessions += 1;
+            stats.minutes += selectedMinutes;
+            localStorage.setItem('zeyin_stats', JSON.stringify(stats));
+            
+            userBonus += earnedCurrentSession;
+            localStorage.setItem('zeyin_bonus', userBonus);
+            updateBonusUI();
+
+            document.getElementById('earnedBonusPopup').innerText = `+${earnedCurrentSession} ₸ бонус қосылды!`;
+            document.getElementById('tabTimer').classList.add('hidden');
+            document.getElementById('rewardSection').classList.remove('hidden');
+            renderQuizzes();
+        }
+
+        function returnToMain() {
+            document.getElementById('rewardSection').classList.add('hidden');
+            switchTab('main');
+        }
+    </script>
+</body>
+</html>
+   
